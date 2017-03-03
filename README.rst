@@ -14,7 +14,7 @@ pyfispip
     :target: https://pypi.python.org/pypi/fispip
     :alt: PyPI Python Versions
 
-.. image:: https://coveralls.io/repos/fopina/pyfispip/badge.svg?branch=master&service=github
+.. image:: https://coveralls.io/repos/github/fopina/pyfispip/badge.svg?branch=master
     :target: https://coveralls.io/github/fopina/pyfispip?branch=master
     :alt: Coverage Status
 
