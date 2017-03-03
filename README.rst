@@ -6,12 +6,12 @@ pyfispip
     :target: https://travis-ci.org/fopina/pyfispip
     :alt: Build Status
 
-.. image:: https://img.shields.io/pypi/v/pyfispip.svg
-    :target: https://pypi.python.org/pypi/pyfispip
+.. image:: https://img.shields.io/pypi/v/fispip.svg
+    :target: https://pypi.python.org/pypi/fispip
     :alt: PyPI Version
 
-.. image:: https://img.shields.io/pypi/pyversions/pyfispip.svg
-    :target: https://pypi.python.org/pypi/pyfispip
+.. image:: https://img.shields.io/pypi/pyversions/fispip.svg
+    :target: https://pypi.python.org/pypi/fispip
     :alt: PyPI Python Versions
 
 .. image:: https://coveralls.io/repos/fopina/pyfispip/badge.svg?branch=master&service=github
