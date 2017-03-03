@@ -1,0 +1,19 @@
+sudo: required
+
+services:
+  - docker
+
+language:
+  - python
+
+python:
+  - "2.7"
+
+install:
+  - pip install -r requirements.testing.txt
+
+script:
+  - nosetests
+  - python docker_integration_tests.py
+
+after_success: coveralls
