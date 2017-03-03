@@ -20,13 +20,19 @@ sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir))
 
 from fispip import MTM
 
-mtm = MTM()
-
-# PIP/MTM IP and port
+# PIP/MTM IP and port configuration
+###################################
 host = '127.0.0.1'
 port = 61315
 msg = "echo 123"
+###################################
 
-mtm.connect(host, port)
-assert mtm.exchange_message(msg) == "123"
-mtm.close()
+
+def main():
+    mtm = MTM()
+    mtm.connect(host, port)
+    assert mtm.exchange_message(msg) == "123"
+    mtm.close()
+
+if __name__ == '__main__':
+    main()

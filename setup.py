@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-import os
 from setuptools import setup, find_packages
 
 from fispip import __program__, __version__, __description__
