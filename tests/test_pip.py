@@ -10,6 +10,22 @@ class PIPTest(unittest.TestCase):
     def setUp(self):
         self._pip = PIP('SCA$IBS')
 
+    def test_lv(self):
+        LONG = 'b' * 255
+        x = self._pip._unpack_lv('\x03ab\x04abc')
+        self.assertEqual(x, ['ab', 'abc'])
+        x = self._pip._unpack_lv('\x02a\x00\x02\x01\x01' + LONG)
+        self.assertEqual(x, ['a', LONG])
+
+        self.assertEqual(
+            self._pip._pack_lv(['ab', 'abc']),
+            '\x03ab\x04abc'
+        )
+        self.assertEqual(
+            self._pip._pack_lv(['a', LONG]),
+            '\x02a\x00\x02\x01\x01' + LONG
+        )
+
     def test_connect(self):
         with patch('fispip.MTM.connect') as f_c:
             with patch(

@@ -8,7 +8,7 @@ SERV_CLASS_MRPC = '3'
 
 
 class PIP(MTM):
-    def __init__(self, server_type=None):
+    def __init__(self, server_type='SCA$IBS'):
         super(PIP, self).__init__(server_type)
         self._token = None
         self._msgid = 0
@@ -40,11 +40,11 @@ class PIP(MTM):
 
         result = self.exchange_message(
             SERV_CLASS_SIGNON,
-            self._pack_v2lv(msg_arr)
+            self._pack_lv(msg_arr)
         )
 
         result_arr = self._check_error(result)
-        result_arr = self._unpack_lv2v(result_arr[1])
+        result_arr = self._unpack_lv(result_arr[1])
 
         self._token = result_arr[0]
 
@@ -96,11 +96,11 @@ class PIP(MTM):
 
         result = self.exchange_message(
             SERV_CLASS_SQL,
-            self._pack_v2lv(msg_arr)
+            self._pack_lv(msg_arr)
         )
 
         result_arr = self._check_error(result)
-        result_arr = self._unpack_lv2v(result_arr[1])
+        result_arr = self._unpack_lv(result_arr[1])
 
         count = result_arr[2]
 
@@ -115,14 +115,19 @@ class PIP(MTM):
                 '',
             ]
             # ignored
-            _ = self.exchange_message(SERV_CLASS_SQL, self._pack_v2lv(msg_arr))
+            _ = self.exchange_message(SERV_CLASS_SQL, self._pack_lv(msg_arr))
 
         return (result, types)
 
     def executeMRPC(self, mrpc_id, *args, **kwargs):
         version = kwargs.get('version', '1')
+        # Some MRPCs will apply V2LV on RETURN variable, others will not
+        # if they do, an extra unpack is required...
+        # only 3 MRPCs exist in PIPv02, not enough for a default based on
+        # "most cases"... default to "not unpack" for now...
+        success_unpack = kwargs.get('success_unpack', False)
 
-        params = self._pack_v2lv(args)
+        params = self._pack_lv(args)
         msg_arr = [
             mrpc_id,
             version,
@@ -132,11 +137,13 @@ class PIP(MTM):
 
         result = self.exchange_message(
             SERV_CLASS_MRPC,
-            self._pack_v2lv(msg_arr)
+            self._pack_lv(msg_arr)
         )
 
         result_arr = self._check_error(result)
 
+        if success_unpack:
+            return self._unpack_lv(result_arr[1])
         return result_arr[1]
 
     def exchange_message(self, service_class, message):
@@ -162,28 +169,28 @@ class PIP(MTM):
             msg_arr[1] = ''
 
         msg_arr = [
-            self._pack_v2lv(msg_arr),
+            self._pack_lv(msg_arr),
             message,
         ]
 
         self._msgid += 1
 
-        return super(PIP, self).exchange_message(self._pack_v2lv(msg_arr))
+        return super(PIP, self).exchange_message(self._pack_lv(msg_arr))
 
     def _check_error(self, packed_string):
         if packed_string[0] != '0':
             raise Exception('MTM_ERROR', packed_string[1:])
 
-        result_arr = self._unpack_lv2v(packed_string[1:])
-        result_arr = self._unpack_lv2v(result_arr[1])
+        result_arr = self._unpack_lv(packed_string[1:])
+        result_arr = self._unpack_lv(result_arr[1])
 
         if result_arr[0] != '0':
-            result_arr = self._unpack_lv2v(result_arr[1])
+            result_arr = self._unpack_lv(result_arr[1])
             raise Exception(result_arr[2], result_arr[4])
 
         return result_arr
 
-    def _unpack_lv2v(self, packed_string):
+    def _unpack_lv(self, packed_string):
         ret_array = []
         i = 0
         while i < len(packed_string):
@@ -193,11 +200,45 @@ class PIP(MTM):
             i += l
         return ret_array
 
-    def _pack_v2lv(self, unpacked_array):
-        message = ''
+    def _pack_lv(self, unpacked_array):
+        """
+        Based on V2LV^MSG
+        """
+        if isinstance(unpacked_array, basestring):
+            unpacked_array = [unpacked_array]
+
+        message = []
+
         for s in unpacked_array:
-            message += chr(len(s)+1) + s
-        return message
+            l = len(s) + 1
+            if l > 255:
+                larr = []
+                while True:
+                    larr.append(l % 256)
+                    l = l / 256
+                    if l == 0:
+                        break
+                    larr[0] += 1
+
+                # in case first larr element got bigger than 256
+                carry = 0
+                for i in xrange(len(larr)):
+                    larr[i] += carry
+                    if larr[i] < 256:
+                        carry = 0
+                        break
+                    larr[i] = larr[i] % 256
+                    carry = 1
+                if carry:
+                    larr.append(1)
+
+                message.extend(['\x00', chr(len(larr))])
+                message.extend(map(chr, larr[::-1]))
+            else:
+                message.append(chr(l))
+            message.append(s)
+
+        return ''.join(message)
 
     def _calc_size(self, message, start_index=0):
         len_attempt = ord(message[start_index])
