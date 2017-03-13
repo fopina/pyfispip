@@ -1,8 +1,9 @@
-## 0.0.3a (2017-03-??)
+## 0.0.3 (2017-03-13)
 
 Features:
 
 * CLI module interface for quick checks
+* Python 3 support
 
 ## 0.0.2 (2017-03-06)
 
