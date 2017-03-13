@@ -44,7 +44,9 @@ Usage
 =====
 
 
-Use it in your code (check examples folder):
+Use it in your code (check `examples`_ folder):
+
+.. _examples: examples
 
 .. code-block:: python
 
