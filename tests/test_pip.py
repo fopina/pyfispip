@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
 import unittest
-import os
-from mock import patch, MagicMock
+from mock import patch
 from fispip import PIP
 
 
@@ -27,7 +26,7 @@ class PIPTest(unittest.TestCase):
         )
 
     def test_connect(self):
-        with patch('fispip.MTM.connect') as f_c:
+        with patch('fispip.MTM.connect'):
             with patch(
                 'fispip.MTM.exchange_message',
                 # unpacked 3 times!

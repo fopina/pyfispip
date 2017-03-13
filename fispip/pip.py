@@ -1,5 +1,6 @@
-from . import MTM
 import time
+from . import MTM
+from .mysix import _basestring, _range, makestring
 
 
 SERV_CLASS_SIGNON = '0'
@@ -102,7 +103,7 @@ class PIP(MTM):
         result_arr = self._check_error(result)
         result_arr = self._unpack_lv(result_arr[1])
 
-        count = result_arr[2]
+        # count = result_arr[2]
 
         result = result_arr[3].split('\r\n')
 
@@ -115,7 +116,7 @@ class PIP(MTM):
                 '',
             ]
             # ignored
-            _ = self.exchange_message(SERV_CLASS_SQL, self._pack_lv(msg_arr))
+            self.exchange_message(SERV_CLASS_SQL, self._pack_lv(msg_arr))
 
         return (result, types)
 
@@ -204,7 +205,7 @@ class PIP(MTM):
         """
         Based on V2LV^MSG
         """
-        if isinstance(unpacked_array, basestring):
+        if isinstance(unpacked_array, _basestring):
             unpacked_array = [unpacked_array]
 
         message = []
@@ -215,14 +216,14 @@ class PIP(MTM):
                 larr = []
                 while True:
                     larr.append(l % 256)
-                    l = l / 256
+                    l = int(l / 256)  # truncate py3
                     if l == 0:
                         break
                     larr[0] += 1
 
                 # in case first larr element got bigger than 256
                 carry = 0
-                for i in xrange(len(larr)):
+                for i in _range(len(larr)):
                     larr[i] += carry
                     if larr[i] < 256:
                         carry = 0
@@ -252,7 +253,7 @@ class PIP(MTM):
 
         total_len = 0
         start_index += 1
-        for byte_ind in xrange(len_len):
+        for byte_ind in _range(len_len):
             total_len *= 256
             total_len += ord(message[start_index + byte_ind])
 

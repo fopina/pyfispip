@@ -4,7 +4,7 @@ import docker
 import time
 import unittest
 import tarfile
-from StringIO import StringIO
+from io import StringIO, BytesIO
 
 from examples import pip_sql_rpc, custom_server, mrpc121
 
@@ -15,7 +15,7 @@ class IntegrationMixin():
         # override this method to add more files to tar
         # return string with commands to be added to entrypoint
         # script. Return empty string if no commands are to be added
-        return ''
+        return b''
 
     @classmethod
     def setUpClass(cls):
@@ -30,12 +30,12 @@ class IntegrationMixin():
             ports={'61315': None},
             command='/entrypoint2.sh'
         )
-        tar_stream = StringIO()
+        tar_stream = BytesIO()
         tar = tarfile.open(fileobj=tar_stream, mode='w')
 
         extra = cls.customDocker(tar)
 
-        file_data = '''\
+        file_data = b'''\
 #!/bin/bash
 
 sed -i '/^sleep/d' /home/pip/pip_V02/pipstart
@@ -46,8 +46,8 @@ sed -i 's/",2)$/",1)/g' home/pip/pip_V02/pipstart
         tarinfo = tarfile.TarInfo(name='entrypoint2.sh')
         tarinfo.size = len(file_data)
         tarinfo.mtime = time.time()
-        tarinfo.mode = 0755
-        tar.addfile(tarinfo, StringIO(file_data))
+        tarinfo.mode = 0o755
+        tar.addfile(tarinfo, BytesIO(file_data))
 
         tar.close()
         tar_stream.seek(0)
@@ -64,9 +64,9 @@ sed -i 's/",2)$/",1)/g' home/pip/pip_V02/pipstart
         prompts = -1
         for line in c.logs(stream=True):
             if prompts < 0:
-                if line.strip().startswith(r'%GTM-I-JNLSTATE'):
+                if line.strip().startswith(b'%GTM-I-JNLSTATE'):
                     prompts = 0
-            elif line.strip().startswith('GTM>'):
+            elif line.strip().startswith(b'GTM>'):
                 prompts += 1
                 if prompts > 1:
                     break
@@ -92,9 +92,9 @@ class PIPTest(IntegrationMixin, unittest.TestCase):
         w = mrpc121.Wrapper()
         w.connect('127.0.0.1', self._client_port, '1', 'xxx')
 
-        fobj = StringIO()
+        fobj = BytesIO()
         w.get_element_by_name('STBLMSG-2951.DAT', file_obj=fobj)
-        self.assertEqual(fobj.getvalue(), '''\
+        self.assertEqual(fobj.getvalue(), b'''\
 MESSAGE\tMSGID\r\n\
 Version number of client message is not compatible with server\t2951''')
 
@@ -104,7 +104,7 @@ Version number of client message is not compatible with server\t2951''')
         )
         self.assertEqual(rows[0], '')
 
-        fobj = StringIO('''\
+        fobj = BytesIO(b'''\
 MESSAGE\tMSGID
 Custom Message\t9999''')
         w.send_element('STBLMSG-9999.DAT', file_obj=fobj)
@@ -134,7 +134,7 @@ Custom Message\t9999''')
             "VALUES('PBS',81,'$$^MRPC081','MRPC081',1,1,1)"
         )
 
-        fobj = StringIO('''\
+        fobj = BytesIO(b'''\
 AUTH\tLOGFLG\tRPCID\tUCLS
 0\t0\t81\tSCA''')
         w.send_element('SCATBL5A-81.DAT', file_obj=fobj)
@@ -143,7 +143,7 @@ AUTH\tLOGFLG\tRPCID\tUCLS
             w.compile_and_link('INV.PROC')
         self.assertEqual(cm.exception.args[1], 'Invalid name - INV')
 
-        fobj = StringIO('''\
+        fobj = BytesIO(b'''\
 //DO NOT MODIFY  Custom MRPC|MRPC999|||||||1
         #OPTION ResultClass ON
 
@@ -192,7 +192,7 @@ class MTMTest(IntegrationMixin, unittest.TestCase):
         Include code for a custom NSM (non-standard messaging) server
         and re-configure SCA$IBS existing SVTYP definition to use it
         """
-        file_data = '''\
+        file_data = b'''\
 ZTSTSV(IM)
         I $E(IM,1,5)="echo " quit $E(IM,6,99999)
         Q ""
@@ -200,10 +200,10 @@ ZTSTSV(IM)
         tarinfo = tarfile.TarInfo(name='home/pip/pip_V02/zrtns/ZTSTSV.m')
         tarinfo.size = len(file_data)
         tarinfo.mtime = time.time()
-        tarinfo.mode = 0666
-        tar.addfile(tarinfo, StringIO(file_data))
+        tarinfo.mode = 0o666
+        tar.addfile(tarinfo, BytesIO(file_data))
 
-        return '''\
+        return b'''\
 sed -i 's/-p61315/-a61315/g' home/pip/pip_V02/mtm/PIPMTM
 echo 's ^CTBL("SVTYP","SCA$IBS")="Profile Server||0|SVCNCT^PBSSRV||1|1|45||1|MTM|ZTSTSV"' | su pip /home/pip/pip_V02/dm
 '''

@@ -1,5 +1,6 @@
 import socket
 import struct
+from .mysix import makestring, makebytes
 
 
 class MTM(object):
@@ -35,8 +36,9 @@ class MTM(object):
         return self.read_message()
 
     def send_message(self, message):
+        message = makebytes(message)
         if self._server_type:
-            message = self._server_type + '\x1c' + message
+            message = makebytes(self._server_type) + b'\x1c' + message
 
         header = struct.pack(self._endianess, len(message) + 2)
         message_to_send = header + message
@@ -52,7 +54,7 @@ class MTM(object):
         read_count = 0
         while read_count < length:
             read_block = min(length - read_count, 1024)
-            partial_message = self._socket.recv(read_block)
+            partial_message = makestring(self._socket.recv(read_block))
             read_count += len(partial_message)
             if not partial_message:
                 break

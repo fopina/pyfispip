@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import unittest
-import os
 from mock import patch
 from fispip import MTM
 
@@ -17,8 +16,8 @@ class MTMTest(unittest.TestCase):
 
     def test_exchange_message(self):
         _recv_queue = [
-            '123',
-            '\x00\x05'
+            b'123',
+            b'\x00\x05'
         ]
 
         def _fake_recv(s, l):
@@ -28,7 +27,7 @@ class MTMTest(unittest.TestCase):
             with patch('socket.socket.recv', _fake_recv):
                 r = self._mtm.exchange_message('echo 123')
 
-        f_s.assert_called_once_with('\x00\x0Aecho 123')
+        f_s.assert_called_once_with(b'\x00\x0Aecho 123')
         self.assertEqual(r, '123')
 
     def test_close(self):
@@ -41,27 +40,27 @@ class MTMTest(unittest.TestCase):
             # big-endian
             self._mtm.set_endianess('>')
             self._mtm.send_message('hello')
-            f_s.assert_called_once_with('\00\x07hello')
+            f_s.assert_called_once_with(b'\00\x07hello')
             f_s.reset_mock()
 
             # little-endian
             self._mtm.set_endianess('<')
             self._mtm.send_message('hello')
-            f_s.assert_called_once_with('\07\x00hello')
+            f_s.assert_called_once_with(b'\07\x00hello')
             f_s.reset_mock()
 
             # fallback: network endian (= big-endian)
             self._mtm.set_endianess('invalid')
             self._mtm.send_message('hello')
-            f_s.assert_called_once_with('\00\x07hello')
+            f_s.assert_called_once_with(b'\00\x07hello')
 
     def test_server_type(self):
         self._mtm = MTM('CUSTOM$SERVER')
         with patch('socket.socket.send') as f_s:
             self._mtm.send_message('hello')
             f_s.assert_called_once_with(
-                '\x00\x15CUSTOM$SERVER\x1c'
-                'hello'
+                b'\x00\x15CUSTOM$SERVER\x1c'
+                b'hello'
             )
 
     def test_read_errors(self):

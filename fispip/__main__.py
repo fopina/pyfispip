@@ -1,10 +1,13 @@
 import argparse
-from . import __description__
+from . import __description__, __program__
 from . import PIP
 
 
 def build_parser():
-    parser = argparse.ArgumentParser(description=__description__)
+    parser = argparse.ArgumentParser(
+        prog=__program__,
+        description=__description__
+    )
     parser.add_argument(
         '-u', '--user',
         dest='user', action='store',

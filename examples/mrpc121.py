@@ -22,6 +22,7 @@ from io import StringIO
 import getpass
 import argparse
 
+PY3 = sys.version_info[0] > 2
 
 # PIP/MTM IP and port configuration
 ###################################
@@ -156,7 +157,10 @@ class Wrapper(object):
         has_more = True
         while has_more:
             has_more, text = self._rpc.ret_obj(token)
-            file_obj.write(text.decode())
+            if PY3:
+                file_obj.write(text.encode())
+            else:
+                file_obj.write(text)
         return file_obj
 
     def send_element(self, filename, file_obj=None, close_file=True):
@@ -196,7 +200,10 @@ class Wrapper(object):
                 data = file_obj.read(1024)
                 if not data:
                     break
-                enc_data = '|'.join(str(ord(x)) for x in data) + '|'
+                if PY3 and isinstance(data, bytes):
+                    enc_data = '|'.join(str(x) for x in data) + '|'
+                else:
+                    enc_data = '|'.join(str(ord(x)) for x in data) + '|'
                 token = self._rpc.init_code(enc_data, token)
             # one last call to make sure code is saved even if it doesn't end
             # in a NEWLINE (condition based on INITCOD1^TBXDQSVR.m)
@@ -261,7 +268,7 @@ def main(args=None):
                 parser.error(
                     'File %s already exists, use -f to overwrite' % args.get
                 )
-            f = open(args.get, 'w')
+            f = open(args.get, 'wb')
             w.get_element_by_name(os.path.basename(args.get), file_obj=f)
             f.close()
 
