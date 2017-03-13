@@ -36,4 +36,49 @@ Or install latest version from github:
 
 .. code-block:: bash
 
-    $ pip install --user git+https://github.com/fopina/pyfispip/
+    $ pip install git+https://github.com/fopina/pyfispip/
+
+
+=====
+Usage
+=====
+
+
+Use it in your code (check examples folder):
+
+.. code-block:: python
+
+    >>> from fispip import PIP
+    >>> pip = PIP()
+    >>> pip.connect('localhost',61315,'1','XXX')
+    >>> pip.executeSQL('SELECT TJD FROM CUVAR')
+    (['60960'], ['D'])
+
+
+Or quickly use the CLI:
+
+.. code-block:: bash
+
+    $ python -m fispip -h
+    usage: __main__.py [-h] [-u USER] [-p PWD] [-P PORT] [-S TYPE] [-s]
+                       host params [params ...]
+
+    Python FIS MTM/PIP SQL/RPC Interface
+
+    positional arguments:
+      host                  Hostname to connect
+      params                For RPC: MRPC_ID [MRPC_PARAM1 [MRPC_PARAM...]] For
+                            SQL: SQL_STATEMENT
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -u USER, --user USER  PIP Username (default: 1)
+      -p PWD, --password PWD
+                            PIP Password (default: XXX)
+      -P PORT, --port PORT  MTM port (default: 61315)
+      -S TYPE, --server TYPE
+                            PIP server type (default: SCA$IBS)
+      -s, --sql             Execute SQL statement (default action is RPC)
+    
+    $ python -m fispip localhost -s select tjd from cuvar
+    60960
